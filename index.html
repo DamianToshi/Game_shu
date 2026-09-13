@@ -15,6 +15,7 @@
     overflow-x: hidden;
     background: linear-gradient(to bottom, #9edff2 0%, #d9f3d0 58%, #6db56d 58%, #4d995b 100%);
     margin: 0;
+    box-sizing: border-box;
     padding: 40px 20px;
   }
 
@@ -47,7 +48,38 @@
     pointer-events: none;
   }
 
-  h1 { color: #444; margin-bottom: 5px; }
+  .zoo-animals {
+    position: fixed;
+    z-index: 0;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .zoo-animal {
+    position: absolute;
+    left: -4rem;
+    font-size: clamp(1.8rem, 7vw, 3rem);
+    filter: drop-shadow(0 3px 2px rgba(45, 83, 47, 0.25));
+    animation: run-across var(--run-time) linear forwards;
+  }
+
+  h1, #status-message, .stats, .grid, button {
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes run-across {
+    from { transform: translateX(0) scaleX(1); }
+    to { transform: translateX(calc(100vw + 8rem)) scaleX(1); }
+  }
+
+  h1 {
+    color: #444;
+    margin: 0 0 5px;
+    font-size: clamp(1.35rem, 5vw, 2rem);
+    text-align: center;
+  }
   
   /* メッセージ表示エリア */
   #status-message {
@@ -66,14 +98,15 @@
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(4, 80px);
-    gap: 12px;
+    width: min(100%, 368px);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(6px, 2.5vw, 12px);
     perspective: 1000px;
   }
 
   .card {
-    width: 80px;
-    height: 80px;
+    width: 100%;
+    aspect-ratio: 1;
     cursor: pointer;
     position: relative;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
@@ -98,13 +131,13 @@
   .card .front {
     background-color: #34495e;
     color: #ecf0f1;
-    font-size: 32px;
+    font-size: clamp(1.5rem, 9vw, 2rem);
   }
 
   /* 表面 */
   .card .back {
     background-color: #fff;
-    font-size: 42px;
+    font-size: clamp(2rem, 12vw, 2.625rem);
     transform: rotateY(180deg);
   }
 
@@ -121,6 +154,26 @@
     box-shadow: 0 4px 0 #d35400;
   }
 
+  @media (max-width: 420px) {
+    body {
+      padding: 24px 12px 32px;
+    }
+
+    #status-message {
+      font-size: 1rem;
+    }
+
+    .stats {
+      font-size: 0.95rem;
+      margin-bottom: 14px;
+    }
+
+    button {
+      width: min(100%, 240px);
+      padding: 11px 18px;
+    }
+  }
+
   button:active { transform: translateY(2px); box-shadow: 0 2px 0 #d35400; }
   
   /* プレビュー中はクリックできないようにする */
@@ -128,6 +181,8 @@
 </style>
 </head>
 <body>
+
+<div class="zoo-animals" id="zoo-animals" aria-hidden="true"></div>
 
 <h1>3秒でやきつけろ！君のその目に！！</h1>
 <div id="status-message">位置を覚えてね！</div>
@@ -150,6 +205,8 @@
   const grid = document.getElementById('grid');
   const mistakesDisplay = document.getElementById('mistakes');
   const statusMsg = document.getElementById('status-message');
+  const zooAnimals = document.getElementById('zoo-animals');
+  const animalEmojis = ['🐘', '🦒', '🦓', '🐒', '🦏', '🦘'];
 
   function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -187,6 +244,18 @@
   function playMissSound() {
     playTone(220, 0.18, 'sawtooth', 0.05);
     playTone(165, 0.28, 'sawtooth', 0.05, 0.12);
+  }
+
+  function spawnAnimal() {
+    const animal = document.createElement('span');
+    animal.className = 'zoo-animal';
+    animal.textContent = animalEmojis[Math.floor(Math.random() * animalEmojis.length)];
+    animal.style.top = `${18 + Math.random() * 68}vh`;
+    animal.style.setProperty('--run-time', `${8 + Math.random() * 7}s`);
+    zooAnimals.appendChild(animal);
+    animal.addEventListener('animationend', () => animal.remove(), { once: true });
+
+    setTimeout(spawnAnimal, 2500 + Math.random() * 4000);
   }
 
   async function initGame() {
@@ -283,6 +352,7 @@
   }
 
   initGame();
+  spawnAnimal();
 </script>
 </body>
 </html>
